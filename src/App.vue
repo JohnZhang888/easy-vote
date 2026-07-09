@@ -32,10 +32,11 @@ onMounted(async () => {
 
 <template>
   <div class="min-h-screen bg-gray-100 p-4">
-    <ul class="space-y-2">
-      <li v-for="candidate in candidates" :key="candidate.name" class="text-lg">
+    <div class="grid gap-2" v-for="candidate in candidates" :key="candidate.name"></div>
+    <!-- <ul class="space-y-2">
+      <li v-for="candidate in candidates" :key="candidate.name" >
         <span :class="{ 'line-through': candidate.disabled }">{{ candidate.name }}</span>
       </li>
-    </ul>
+    </ul> -->
   </div>
 </template>
