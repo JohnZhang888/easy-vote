@@ -1,79 +1,151 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-
-import { BadgeCheckIcon, ChevronRightIcon } from '@lucide/vue'
+import { computed, ref } from 'vue'
+import { UserPlus } from 'lucide-vue-next'
+import AppHeader from '@/components/AppHeader.vue'
+import CandidateCard from '@/components/CandidateCard.vue'
+import CandidateDialog from '@/components/CandidateDialog.vue'
+import SettingsDialog from '@/components/SettingsDialog.vue'
 import { Button } from '@/components/ui/button'
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from '@/components/ui/item'
+import { useVoting } from '@/composables/useVoting'
+import type { CandidateColor, Settings } from '@/lib/types'
 
-class Candidate {
-  vote: number = 0;
-  tag: string = ""; //预留给以后版本 
+const {
+  candidates,
+  ballotCount,
+  settings,
+  sortMode,
+  selectedIds,
+  selectedCount,
+  withinBounds,
+  canUndo,
+  addCandidate,
+  updateCandidate,
+  removeCandidate,
+  toggleSelected,
+  nextBallot,
+  undoLastBallot,
+  sortedCandidates,
+  electedIds,
+  totalVotes,
+} = useVoting()
+
+// —— 弹窗状态 ——
+const addOpen = ref(false)
+const editOpen = ref(false)
+const editingId = ref<string | null>(null)
+const settingsOpen = ref(false)
+
+const editingCandidate = computed(() =>
+  editingId.value == null
+    ? null
+    : (candidates.value.find((c) => c.id === editingId.value) ?? null),
+)
+
+function openAdd() {
+  addOpen.value = true
 }
 
-const candidates = ref(new Map<string, Candidate>());
+function openEdit(id: string) {
+  editingId.value = id
+  editOpen.value = true
+}
 
-onMounted(async () => {
-  const dataResponse = await fetch('./namelist');
-  const namelist = await dataResponse.text();
-  const lines = namelist
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line && !line.startsWith('//'));
-
-  for (const line of lines) {
-    const words = line.split(/\s+/);
-    if (!words[0]) continue;
-    candidates.value.set(words[0], new Candidate);
+function handleSubmit(
+  mode: 'add' | 'edit',
+  payload: { name: string; color: CandidateColor; disabled: boolean },
+) {
+  if (mode === 'edit' && editingId.value) {
+    updateCandidate(editingId.value, payload)
+  } else {
+    addCandidate(payload.name)
   }
-});
+}
+
+function handleDelete(id: string) {
+  removeCandidate(id)
+  if (editingId.value === id) editingId.value = null
+}
+
+function handleSettingsSave(updated: Settings) {
+  settings.value = updated
+}
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-100 p-4">
-    <div class="grid gap-2 grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]">
+  <div class="flex min-h-dvh flex-col bg-background">
+    <AppHeader
+      :ballot-count="ballotCount"
+      :selected-count="selectedCount"
+      :min-per-ballot="settings.minPerBallot"
+      :max-per-ballot="settings.maxPerBallot"
+      :can-next="withinBounds"
+      :can-undo="canUndo"
+      :sort-mode="sortMode"
+      :total-votes="totalVotes"
+      @update:sort-mode="sortMode = $event"
+      @next="nextBallot"
+      @undo="undoLastBallot"
+      @add="openAdd"
+      @open-settings="settingsOpen = true"
+    />
+
+    <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-4">
+      <!-- 空状态 -->
       <div
-        v-for="([name, candidate]) in candidates"
-        :key="name"
-        class="flex h-8 w-full items-center border border-black/20 bg-gray-50"
+        v-if="candidates.length === 0"
+        class="flex flex-col items-center justify-center gap-4 py-24 text-center"
       >
-        <input type="checkbox" />
-        <span>{{ name }}</span>
-      </div>
-      <div class="flex w-full max-w-md flex-col gap-6">
-    <Item variant="outline">
-      <ItemContent>
-        <ItemTitle>Basic Item</ItemTitle>
-        <ItemDescription>
-          A simple item with title and description.
-        </ItemDescription>
-      </ItemContent>
-      <ItemActions>
-        <Button variant="outline" size="sm">
-          Action
+        <div class="grid size-16 place-content-center rounded-full border bg-muted/40">
+          <UserPlus class="size-8 text-muted-foreground" aria-hidden="true" />
+        </div>
+        <div class="space-y-1">
+          <p class="text-base font-medium">还没有候选人</p>
+          <p class="text-sm text-muted-foreground">
+            点击右上角「添加候选人」，录入后即可开始投票唱票。
+          </p>
+        </div>
+        <Button @click="openAdd">
+          <UserPlus class="size-4" aria-hidden="true" />
+          添加第一位候选人
         </Button>
-      </ItemActions>
-    </Item>
-    <Item variant="outline" size="sm" as-child>
-      <a href="#">
-        <ItemMedia>
-          <BadgeCheckIcon class="size-5" />
-        </ItemMedia>
-        <ItemContent>
-          <ItemTitle>Your profile has been verified.</ItemTitle>
-        </ItemContent>
-        <ItemActions>
-          <ChevronRightIcon class="size-4" />
-        </ItemActions>
-      </a>
-    </Item>
-  </div>
-    </div>
+      </div>
+
+      <!-- 候选人网格 -->
+      <div
+        v-else
+        class="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-2"
+      >
+        <CandidateCard
+          v-for="c in sortedCandidates"
+          :key="c.id"
+          :candidate="c"
+          :selected="selectedIds.includes(c.id)"
+          :is-elected="electedIds.has(c.id)"
+          @toggle="toggleSelected(c.id)"
+          @edit="openEdit(c.id)"
+        />
+      </div>
+    </main>
+
+    <CandidateDialog
+      :open="addOpen"
+      mode="add"
+      @update:open="addOpen = $event"
+      @submit="handleSubmit('add', $event)"
+    />
+    <CandidateDialog
+      :open="editOpen"
+      mode="edit"
+      :candidate="editingCandidate"
+      @update:open="editOpen = $event"
+      @submit="handleSubmit('edit', $event)"
+      @delete="handleDelete"
+    />
+    <SettingsDialog
+      :open="settingsOpen"
+      :settings="settings"
+      @update:open="settingsOpen = $event"
+      @save="handleSettingsSave"
+    />
   </div>
 </template>

@@ -1,5 +1,3 @@
-import { fileURLToPath, URL } from 'node:url'
-
 import { defineConfig } from 'vite'
 import { viteSingleFile } from 'vite-plugin-singlefile'
 import path from 'node:path'
@@ -19,7 +17,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(import.meta.dirname, './src'),
     },
   },
 })
