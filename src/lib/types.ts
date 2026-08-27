@@ -20,8 +20,11 @@ export interface Candidate {
   votes: number
 }
 
-/** 带实时排名的候选人（竞赛排名：1, 2, 2, 4 …） */
+/** 带实时排名与实时得票的候选人（竞赛排名：1, 2, 2, 4 …） */
 export interface RankedCandidate extends Candidate {
+  /** 实时得票数 = 累计得票 + 当前这张票是否勾选（勾选即 +1） */
+  liveVotes: number
+  /** 实时排名 */
   rank: number
 }
 

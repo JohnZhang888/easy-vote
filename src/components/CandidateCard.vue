@@ -37,11 +37,11 @@ const colorStyle = computed(() =>
     @click="emit('toggle')"
   >
     <Checkbox
-      :checked="selected"
+      :model-value="selected"
       :disabled="candidate.disabled"
       class="shrink-0"
       @click.stop
-      @update:checked="emit('toggle')"
+      @update:model-value="emit('toggle')"
     />
     <ItemContent class="min-w-0">
       <ItemTitle class="w-full gap-1.5">
@@ -66,7 +66,7 @@ const colorStyle = computed(() =>
         <span class="tabular-nums">#{{ candidate.rank }}</span>
       </Badge>
       <span class="flex items-baseline gap-1 text-sm tabular-nums">
-        <b>{{ candidate.votes }}</b>
+        <b>{{ candidate.liveVotes }}</b>
         <span class="text-xs text-muted-foreground">票</span>
       </span>
       <Button

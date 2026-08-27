@@ -151,26 +151,41 @@ export function useVoting(): Voting {
 
   // ---------- 排名 / 排序 ----------
 
-  /** 按得票降序的竞赛排名（平票同名次，1,2,2,4） */
+  const selectedIdsSet = computed(() => new Set(selectedIds.value))
+
+  /**
+   * 实时得票数 = 累计得票 + 当前这张票是否已勾选。
+   * 勾选/取消勾选时立即反映在卡片数字、排名与排序上。
+   */
+  function withLiveVotes(c: Candidate): Omit<RankedCandidate, 'rank'> {
+    return {
+      ...c,
+      liveVotes: c.votes + (selectedIdsSet.value.has(c.id) ? 1 : 0),
+    }
+  }
+
+  /** 按实时得票降序的竞赛排名（平票同名次，1,2,2,4） */
   const ranked = computed<RankedCandidate[]>(() => {
-    const sorted = [...candidates.value].sort((a, b) => b.votes - a.votes)
+    const sorted = candidates.value
+      .map(withLiveVotes)
+      .sort((a, b) => b.liveVotes - a.liveVotes)
     let lastVotes: number | null = null
     let lastRank = 0
     return sorted.map((c, i) => {
-      const rank = c.votes === lastVotes ? lastRank : i + 1
-      lastVotes = c.votes
+      const rank = c.liveVotes === lastVotes ? lastRank : i + 1
+      lastVotes = c.liveVotes
       lastRank = rank
       return { ...c, rank }
     })
   })
 
-  /** 按当前排序模式展示的候选人（附实时排名） */
+  /** 按当前排序模式展示的候选人（附实时排名与实时得票） */
   const sortedCandidates = computed<RankedCandidate[]>(() => {
     const rankById = new Map(ranked.value.map((r) => [r.id, r.rank]))
-    const list = [...candidates.value]
+    const list = candidates.value.map(withLiveVotes)
     switch (sortMode.value) {
       case 'votes':
-        list.sort((a, b) => b.votes - a.votes)
+        list.sort((a, b) => b.liveVotes - a.liveVotes)
         break
       case 'name':
         list.sort((a, b) => {
@@ -192,7 +207,7 @@ export function useVoting(): Voting {
   })
 
   const totalVotes = computed(() =>
-    candidates.value.reduce((sum, c) => sum + c.votes, 0),
+    ranked.value.reduce((sum, r) => sum + r.liveVotes, 0),
   )
 
   return {

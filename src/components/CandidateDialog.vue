@@ -137,8 +137,8 @@ function onDelete() {
         <div class="flex items-center gap-2">
           <Checkbox
             id="candidate-disabled"
-            :checked="disabled"
-            @update:checked="onDisabledChange"
+            :model-value="disabled"
+            @update:model-value="onDisabledChange"
           />
           <Label for="candidate-disabled" class="cursor-pointer">
             停用此候选人（保留已有票数，不可再被勾选）
