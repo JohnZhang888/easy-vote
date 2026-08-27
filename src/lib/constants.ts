@@ -41,4 +41,5 @@ export const DEFAULT_SETTINGS: Settings = {
   minPerBallot: 1,
   maxPerBallot: null,
   electedCount: 1,
+  enlargeFont: false,
 }

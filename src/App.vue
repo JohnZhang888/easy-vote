@@ -4,9 +4,12 @@ import { UserPlus } from 'lucide-vue-next'
 import AppHeader from '@/components/AppHeader.vue'
 import CandidateCard from '@/components/CandidateCard.vue'
 import CandidateDialog from '@/components/CandidateDialog.vue'
+import ConfigDialog from '@/components/ConfigDialog.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import SettingsDialog from '@/components/SettingsDialog.vue'
 import { Button } from '@/components/ui/button'
 import { useVoting } from '@/composables/useVoting'
+import type { ImportResult } from '@/lib/configFile'
 import type { CandidateColor, Settings } from '@/lib/types'
 
 const {
@@ -24,6 +27,10 @@ const {
   toggleSelected,
   nextBallot,
   undoLastBallot,
+  clearAllVotes,
+  clearAllCandidates,
+  resetAll,
+  applyImportedConfig,
   sortedCandidates,
   electedIds,
   totalVotes,
@@ -34,6 +41,7 @@ const addOpen = ref(false)
 const editOpen = ref(false)
 const editingId = ref<string | null>(null)
 const settingsOpen = ref(false)
+const configOpen = ref(false)
 
 const editingCandidate = computed(() =>
   editingId.value == null
@@ -57,7 +65,10 @@ function handleSubmit(
   if (mode === 'edit' && editingId.value) {
     updateCandidate(editingId.value, payload)
   } else {
-    addCandidate(payload.name)
+    addCandidate(payload.name, {
+      color: payload.color,
+      disabled: payload.disabled,
+    })
   }
 }
 
@@ -68,6 +79,52 @@ function handleDelete(id: string) {
 
 function handleSettingsSave(updated: Settings) {
   settings.value = updated
+}
+
+function handleConfigImport(result: ImportResult) {
+  applyImportedConfig(result)
+}
+
+// —— 危险操作二次确认 ——
+const dangerAction = ref<'clear-votes' | 'delete-all' | 'reset-all' | null>(null)
+
+const dangerMeta = computed(() => {
+  switch (dangerAction.value) {
+    case 'clear-votes':
+      return {
+        title: '清空所有选票',
+        description:
+          '将全部候选人的累计得票归零，已统计的票数也会重置。此操作不可撤销，确定继续吗？',
+        confirmLabel: '清空',
+      }
+    case 'delete-all':
+      return {
+        title: '删除所有候选人',
+        description:
+          '将删除全部候选人及其得票记录，此操作不可撤销。确定继续吗？',
+        confirmLabel: '删除',
+      }
+    case 'reset-all':
+      return {
+        title: '恢复默认设置',
+        description:
+          '将恢复全部默认配置（投票设置、排序方式），并清空所有候选人与选票。此操作不可撤销，确定继续吗？',
+        confirmLabel: '恢复',
+      }
+    default:
+      return null
+  }
+})
+
+function handleDangerConfirm() {
+  if (dangerAction.value === 'clear-votes') clearAllVotes()
+  else if (dangerAction.value === 'delete-all') clearAllCandidates()
+  else if (dangerAction.value === 'reset-all') {
+    resetAll()
+    // 设置已被重置，关闭设置弹窗避免表单显示过期值
+    settingsOpen.value = false
+  }
+  dangerAction.value = null
 }
 </script>
 
@@ -87,6 +144,7 @@ function handleSettingsSave(updated: Settings) {
       @undo="undoLastBallot"
       @add="openAdd"
       @open-settings="settingsOpen = true"
+      @open-config="configOpen = true"
     />
 
     <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-4">
@@ -113,7 +171,7 @@ function handleSettingsSave(updated: Settings) {
       <!-- 候选人网格 -->
       <div
         v-else
-        class="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-2"
+        class="grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-2"
       >
         <CandidateCard
           v-for="c in sortedCandidates"
@@ -121,6 +179,7 @@ function handleSettingsSave(updated: Settings) {
           :candidate="c"
           :selected="selectedIds.includes(c.id)"
           :is-elected="electedIds.has(c.id)"
+          :enlarge="settings.enlargeFont"
           @toggle="toggleSelected(c.id)"
           @edit="openEdit(c.id)"
         />
@@ -144,8 +203,30 @@ function handleSettingsSave(updated: Settings) {
     <SettingsDialog
       :open="settingsOpen"
       :settings="settings"
+      :candidate-count="candidates.length"
+      :total-votes="totalVotes"
       @update:open="settingsOpen = $event"
       @save="handleSettingsSave"
+      @clear-votes="dangerAction = 'clear-votes'"
+      @delete-all="dangerAction = 'delete-all'"
+      @reset-all="dangerAction = 'reset-all'"
+    />
+    <ConfigDialog
+      :open="configOpen"
+      :candidates="candidates"
+      :settings="settings"
+      :sort-mode="sortMode"
+      @update:open="configOpen = $event"
+      @import="handleConfigImport"
+    />
+    <ConfirmDialog
+      :open="dangerMeta !== null"
+      :title="dangerMeta?.title ?? ''"
+      :description="dangerMeta?.description ?? ''"
+      :confirm-label="dangerMeta?.confirmLabel ?? '确定'"
+      destructive
+      @update:open="(v) => { if (!v) dangerAction = null }"
+      @confirm="handleDangerConfirm"
     />
   </div>
 </template>

@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ArrowUpDown, RotateCcw, Settings, UserPlus, Vote } from 'lucide-vue-next'
+import {
+  ArrowUpDown,
+  FileCog,
+  RotateCcw,
+  Settings,
+  UserPlus,
+  Vote,
+} from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import { Separator } from '@/components/ui/separator'
 import {
   Select,
@@ -30,6 +38,7 @@ const emit = defineEmits<{
   undo: []
   add: []
   'open-settings': []
+  'open-config': []
 }>()
 
 const boundsText = computed(() =>
@@ -66,6 +75,24 @@ const hint = computed(() => {
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="配置文件"
+          @click="emit('open-config')"
+        >
+          <FileCog class="size-4" aria-hidden="true" />
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="设置"
+          @click="emit('open-settings')"
+        >
+          <Settings class="size-4" aria-hidden="true" />
+        </Button>
+
         <Select
           :model-value="sortMode"
           @update:model-value="emit('update:sortMode', $event as SortMode)"
@@ -85,25 +112,6 @@ const hint = computed(() => {
           </SelectContent>
         </Select>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="撤销上一张票"
-          :disabled="!canUndo"
-          @click="emit('undo')"
-        >
-          <RotateCcw class="size-4" aria-hidden="true" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="投票设置"
-          @click="emit('open-settings')"
-        >
-          <Settings class="size-4" aria-hidden="true" />
-        </Button>
-
         <Separator
           orientation="vertical"
           class="hidden h-6 sm:block"
@@ -114,10 +122,21 @@ const hint = computed(() => {
           添加候选人
         </Button>
 
-        <Button :disabled="!canNext" @click="emit('next')">
-          <Vote class="size-4" aria-hidden="true" />
-          下一张票
-        </Button>
+        <ButtonGroup>
+          <Button :disabled="!canNext" @click="emit('next')">
+            <Vote class="size-4" aria-hidden="true" />
+            下一张票
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label="撤销上一张票"
+            :disabled="!canUndo"
+            @click="emit('undo')"
+          >
+            <RotateCcw class="size-4" aria-hidden="true" />
+          </Button>
+        </ButtonGroup>
       </div>
     </div>
 

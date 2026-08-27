@@ -2,6 +2,7 @@ import { computed, ref } from 'vue'
 import type { InjectionKey, Ref } from 'vue'
 import { useStorage } from '@vueuse/core'
 import { DEFAULT_SETTINGS } from '@/lib/constants'
+import type { ImportResult } from '@/lib/configFile'
 import type {
   Candidate,
   CandidateColor,
@@ -34,7 +35,10 @@ export interface Voting {
   withinBounds: Ref<boolean>
   canUndo: Ref<boolean>
 
-  addCandidate: (name: string) => void
+  addCandidate: (
+    name: string,
+    options?: { color?: CandidateColor; disabled?: boolean },
+  ) => void
   updateCandidate: (
     id: string,
     patch: Partial<Pick<Candidate, 'name' | 'color' | 'disabled'>>,
@@ -44,6 +48,16 @@ export interface Voting {
   toggleSelected: (id: string) => void
   nextBallot: () => void
   undoLastBallot: () => void
+
+  /** 清空所有候选人的累计得票（保留名单） */
+  clearAllVotes: () => void
+  /** 删除全部候选人及其得票记录 */
+  clearAllCandidates: () => void
+  /** 恢复所有默认配置，并清空候选人、票数与唱票记录 */
+  resetAll: () => void
+
+  /** 应用配置文件导入结果：候选人覆盖、设置/排序按字段合并 */
+  applyImportedConfig: (result: ImportResult) => void
 
   sortedCandidates: Ref<RankedCandidate[]>
   electedIds: Ref<Set<string>>
@@ -68,14 +82,17 @@ export function useVoting(): Voting {
 
   // ---------- 候选人增删改 ----------
 
-  function addCandidate(name: string) {
+  function addCandidate(
+    name: string,
+    options?: { color?: CandidateColor; disabled?: boolean },
+  ) {
     const trimmed = name.trim()
     if (!trimmed) return
     candidates.value.push({
       id: createId(),
       name: trimmed,
-      color: null,
-      disabled: false,
+      color: options?.color ?? null,
+      disabled: options?.disabled ?? false,
       votes: 0,
     })
   }
@@ -147,6 +164,66 @@ export function useVoting(): Voting {
     ballotCount.value = Math.max(0, ballotCount.value - 1)
     selectedIds.value = last.ids
     lastBallot.value = null
+  }
+
+  // ---------- 危险操作 ----------
+
+  /** 清空所有候选人的累计得票，同时归零票数与撤销记录 */
+  function clearAllVotes() {
+    for (const c of candidates.value) {
+      c.votes = 0
+    }
+    ballotCount.value = 0
+    selectedIds.value = []
+    lastBallot.value = null
+  }
+
+  /** 删除全部候选人，一并清空票数、勾选与撤销记录 */
+  function clearAllCandidates() {
+    candidates.value = []
+    ballotCount.value = 0
+    selectedIds.value = []
+    lastBallot.value = null
+  }
+
+  /** 恢复默认配置（设置、排序方式），并清空候选人、票数与唱票记录 */
+  function resetAll() {
+    candidates.value = []
+    ballotCount.value = 0
+    settings.value = { ...DEFAULT_SETTINGS }
+    sortMode.value = 'name'
+    selectedIds.value = []
+    lastBallot.value = null
+  }
+
+  // ---------- 配置文件导入 ----------
+
+  /**
+   * 应用配置文件导入结果：
+   * - candidates 提供时整体覆盖现有候选人（重建 id、票数清零），并清空当前勾选与撤销记录；
+   * - settings 仅覆盖文件中提到的字段，未提到则保留当前值；
+   * - sortMode 提供时覆盖排序方式。
+   */
+  function applyImportedConfig(result: ImportResult) {
+    if (result.candidates !== undefined) {
+      candidates.value = result.candidates.map((c) => ({
+        id: createId(),
+        name: c.name,
+        color: c.color,
+        disabled: c.disabled,
+        votes: 0,
+      }))
+      // 候选人被整体覆盖，票数与唱票记录一并清零，避免“已统计 N 张但总票数为 0”
+      ballotCount.value = 0
+      selectedIds.value = []
+      lastBallot.value = null
+    }
+    if (result.settings) {
+      settings.value = { ...settings.value, ...result.settings }
+    }
+    if (result.sortMode !== undefined) {
+      sortMode.value = result.sortMode
+    }
   }
 
   // ---------- 排名 / 排序 ----------
@@ -225,6 +302,10 @@ export function useVoting(): Voting {
     toggleSelected,
     nextBallot,
     undoLastBallot,
+    clearAllVotes,
+    clearAllCandidates,
+    resetAll,
+    applyImportedConfig,
     sortedCandidates,
     electedIds,
     totalVotes,

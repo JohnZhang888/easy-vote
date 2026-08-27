@@ -38,4 +38,6 @@ export interface Settings {
   maxPerBallot: number | null
   /** 当选人数（得票前 N 名） */
   electedCount: number
+  /** 是否放大候选人卡片的字号（用于大屏/投影） */
+  enlargeFont: boolean
 }
