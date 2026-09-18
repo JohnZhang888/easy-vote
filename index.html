@@ -2,6 +2,13 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8">
+    <script>
+      // 首屏渲染前同步浏览器配色，避免深浅色闪烁
+      document.documentElement.classList.toggle(
+        'dark',
+        window.matchMedia('(prefers-color-scheme: dark)').matches,
+      )
+    </script>
     <link rel="icon" href="/favicon.ico">
     <link rel="stylesheet" href="src/style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

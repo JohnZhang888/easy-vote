@@ -33,7 +33,7 @@ const colorStyle = computed(() =>
   <Item
     variant="outline"
     size="sm"
-    class="cursor-pointer select-none bg-card transition-shadow duration-200 hover:shadow-md shadow-sm"
+    class="cursor-pointer select-none bg-card transition-shadow duration-200 hover:shadow-sm shadow-xs"
     :class="[
       enlarge && 'gap-3 px-4 py-4',
       colorStyle,

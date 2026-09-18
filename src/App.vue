@@ -8,9 +8,13 @@ import ConfigDialog from '@/components/ConfigDialog.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import SettingsDialog from '@/components/SettingsDialog.vue'
 import { Button } from '@/components/ui/button'
+import { useColorScheme } from '@/composables/useColorScheme'
 import { useVoting } from '@/composables/useVoting'
 import type { ImportResult } from '@/lib/configFile'
 import type { CandidateColor, Settings } from '@/lib/types'
+
+// 明暗模式跟随浏览器 / 系统设置
+useColorScheme()
 
 const {
   candidates,

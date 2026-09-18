@@ -62,7 +62,7 @@ const hint = computed(() => {
 </script>
 
 <template>
-  <header class="sticky top-0 z-40 border-b bg-background/90 backdrop-blur">
+  <header class="sticky top-0 z-40 border-b bg-background/90 backdrop-blur shadow-xs">
     <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-3">
       <div class="mr-auto flex min-w-0 items-center gap-2">
         <Vote class="size-6 shrink-0 text-primary" aria-hidden="true" />

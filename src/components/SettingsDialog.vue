@@ -138,21 +138,19 @@ function onSave() {
 
       <!-- 危险操作 -->
       <section class="grid gap-2">
-        <p class="text-sm font-medium text-red-600">危险操作</p>
+        <p class="text-sm font-medium text-destructive">危险操作</p>
         <div class="flex flex-wrap gap-2">
           <Button
-            variant="outline"
+            variant="destructive"
             :disabled="totalVotes === 0"
-            class="text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700"
             @click="emit('clear-votes')"
           >
             <RotateCcw class="size-4" aria-hidden="true" />
             清空所有选票
           </Button>
           <Button
-            variant="outline"
+            variant="destructive"
             :disabled="candidateCount === 0"
-            class="text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700"
             @click="emit('delete-all')"
           >
             <Trash2 class="size-4" aria-hidden="true" />
@@ -160,8 +158,8 @@ function onSave() {
           </Button>
         </div>
         <Button
-          variant="outline"
-          class="w-full text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+          variant="destructive"
+          class="w-full"
           @click="emit('reset-all')"
         >
           <RefreshCcw class="size-4" aria-hidden="true" />
