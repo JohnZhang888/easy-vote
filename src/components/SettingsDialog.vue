@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { RefreshCcw, RotateCcw, Trash2 } from 'lucide-vue-next'
+import { RefreshCcw, RotateCcw, Trash2 } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {

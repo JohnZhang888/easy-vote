@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { FileJson, FileText, Upload } from 'lucide-vue-next'
+import { FileJson, FileText, Upload } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,

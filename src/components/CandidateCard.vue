@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Ban, Pencil, Trophy } from 'lucide-vue-next'
+import { Ban, Pencil, Trophy } from '@lucide/vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -33,11 +33,11 @@ const colorStyle = computed(() =>
   <Item
     variant="outline"
     size="sm"
-    class="cursor-pointer select-none transition-shadow hover:shadow-sm"
+    class="cursor-pointer select-none bg-card transition-shadow duration-200 hover:shadow-md shadow-sm"
     :class="[
       enlarge && 'gap-3 px-4 py-4',
       colorStyle,
-      isElected && 'ring-2 ring-amber-400/70',
+      // isElected && 'ring-2 ring-amber-400/70',
       candidate.disabled && 'opacity-60',
     ]"
     @click="emit('toggle')"

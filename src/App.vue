@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { UserPlus } from 'lucide-vue-next'
+import { UserPlus } from '@lucide/vue'
 import AppHeader from '@/components/AppHeader.vue'
 import CandidateCard from '@/components/CandidateCard.vue'
 import CandidateDialog from '@/components/CandidateDialog.vue'
@@ -129,7 +129,7 @@ function handleDangerConfirm() {
 </script>
 
 <template>
-  <div class="flex min-h-dvh flex-col bg-background">
+  <div class="flex min-h-dvh flex-col bg-secondary">
     <AppHeader
       :ballot-count="ballotCount"
       :selected-count="selectedCount"
