@@ -114,7 +114,7 @@ const hint = computed(() => {
 
         <Separator
           orientation="vertical"
-          class="hidden h-6 sm:block"
+          class="hidden h-6 data-[orientation=vertical]:self-center sm:block"
         />
 
         <Button variant="outline" @click="emit('add')">
