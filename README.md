@@ -7,7 +7,7 @@
 - 实时得票与实时排名：勾选即生效，平票采用竞赛排名（1、2、2、4 …）
 - 当选标记：自动标出得票前 N 名候选人
 - 本地持久化：候选人、票数、设置全部保存在浏览器 `localStorage`
-- 单文件构建：`npm run build` 后产物为单个 HTML 文件，可离线使用或随处分发
+- 两种构建形态：默认多文件构建（`dist/`，适合部署到静态服务器）；也可切换为单文件构建（`dist-single-file/index.html`），可离线使用或随处分发
 
 ## 功能特性
 
@@ -53,7 +53,7 @@
 
 - [Vue 3](https://vuejs.org/)（Composition API + `<script setup>`）
 - [TypeScript](https://www.typescriptlang.org/)
-- [Vite](https://vite.dev/) + `vite-plugin-singlefile`（单文件构建）
+- [Vite](https://vite.dev/)（默认多文件构建） + [`vite-plugin-singlefile`](https://github.com/richardtallent/vite-plugin-singlefile)（可选单文件构建）
 - [Tailwind CSS v4](https://tailwindcss.com/)（通过 `@tailwindcss/vite` 集成）
 - [reka-ui](https://reka-ui.com/)（无样式组件，内置 Dialog / Select / Checkbox 等）
 - [lucide-vue-next](https://lucide.dev/) 图标
@@ -70,20 +70,31 @@ npm install
 # 启动开发服务器（热更新）
 npm run dev
 
-# 类型检查 + 生产构建（输出单个 HTML 文件）
+# 类型检查 + 生产构建（多文件，输出到 dist/）
 npm run build
+
+# 类型检查 + 单文件构建（输出到 dist-single-file/index.html）
+npm run build:single-file
 
 # 预览生产构建产物
 npm run preview
+
+# 预览单文件构建产物
+npm run preview:single-file
 
 # 仅类型检查
 npm run type-check
 
 # 仅构建（跳过类型检查）
 npm run build-only
+
+# 仅单文件构建（跳过类型检查）
+npm run build-single-file
 ```
 
-构建产物位于 `dist/` 目录下，为单个 HTML 文件，可直接双击打开或部署到任意静态服务器。
+默认执行 `npm run build` 得到多文件产物，位于 `dist/`，可直接部署到任意静态服务器（产物使用相对路径，放在子目录下也能正常工作）。
+
+若需要一个可离线分发、双击即用的文件，执行 `npm run build:single-file`，产物为 `dist-single-file/index.html`——CSS 与 JS 全部内联，无外部依赖。
 
 ## 使用说明
 
